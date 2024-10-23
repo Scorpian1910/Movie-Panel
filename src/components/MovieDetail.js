@@ -7,7 +7,10 @@ const MovieDetail = () => {
   const [cast, setCast] = useState([]);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1); // Current page for cast pagination
-  const castPerPage = 6; // 6 cast members per page
+
+  const castPerPageMobile = 3;
+  const castPerPageTablet = 5;
+  const castPerPageDesktop = 6;
 
   let API_key = "a67a1d57834da733403b86a0feb8351d";
   let base_url = "https://api.themoviedb.org/3/movie";
@@ -40,7 +43,20 @@ const MovieDetail = () => {
       });
   }, [API_key, base_url, id]);
 
-  // Pagination logic for cast
+  // Determine the number of cast members per page based on the screen size
+  const getCastPerPage = () => {
+    if (window.innerWidth >= 1024) return castPerPageDesktop; // Desktop
+    if (window.innerWidth >= 768) return castPerPageTablet; // Tablet
+    return castPerPageMobile; // Mobile
+  };
+
+  useEffect(() => {
+    const handleResize = () => setCurrentPage(1); // Reset page when resizing
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const castPerPage = getCastPerPage();
   const indexOfLastCast = currentPage * castPerPage;
   const indexOfFirstCast = indexOfLastCast - castPerPage;
   const currentCast = cast.slice(indexOfFirstCast, indexOfLastCast);
@@ -71,8 +87,8 @@ const MovieDetail = () => {
           className="relative w-full h-[550px] bg-cover bg-center rounded-lg"
           style={{
             backgroundImage: `url(${img_path + movie.poster_path})`,
-            backgroundPosition: "right", // Makes the poster stretch to the right end
-            backgroundSize: "cover", // Ensures the image covers the full area
+            backgroundPosition: "right",
+            backgroundSize: "cover",
           }}
         >
           {/* Overlay Movie Details */}
@@ -106,24 +122,22 @@ const MovieDetail = () => {
         {/* Movie Cast */}
         <div className="mt-6 w-full justify-between items-center">
           <h3 className="text-2xl font-bold mb-2">Cast</h3>
-          <div className="flex overflow-x-auto justify-between items-center gap-4">
+          <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4">
             {currentCast.map((actor) => (
-              <div key={actor.cast_id} className="text-center justify-between">
+              <div key={actor.cast_id} className="text-center">
                 {actor.profile_path ? (
                   <img
                     src={`https://image.tmdb.org/t/p/w200${actor.profile_path}`}
                     alt={actor.name}
-                    className="w-35 h-auto justify-between items-center object-cover mb-2"
+                    className="w-35 h-auto object-cover mb-2"
                   />
                 ) : (
                   <div className="w-24 h-36 bg-gray-600 rounded-lg mb-2 flex items-center justify-center">
                     <span>No Image</span>
                   </div>
                 )}
-                <p className="text-white flex flex-col">{actor.name}</p>
-                <p className="text-gray-400 text-sm flex flex-col">
-                  as {actor.character}
-                </p>
+                <p className="text-white">{actor.name}</p>
+                <p className="text-gray-400 text-sm">as {actor.character}</p>
               </div>
             ))}
           </div>
